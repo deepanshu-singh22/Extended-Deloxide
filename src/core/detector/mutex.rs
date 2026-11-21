@@ -254,7 +254,10 @@ where
 }
 
 /// Select a victim thread from a deadlock cycle based on the given RecoveryPolicy.
-pub fn select_victim(cycle: &[ThreadId], policy: crate::core::recovery::RecoveryPolicy) -> ThreadId {
+pub fn select_victim(
+    cycle: &[ThreadId],
+    policy: crate::core::recovery::RecoveryPolicy,
+) -> ThreadId {
     use crate::core::recovery::RecoveryPolicy;
     if cycle.is_empty() {
         return 0;

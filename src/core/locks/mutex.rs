@@ -224,10 +224,11 @@ impl<T> Mutex<T> {
         }
     }
 
-
     /// Acquire the lock cooperatively, returning `Err(DeadlockError)` instead of
     /// hanging if acquiring this lock would form a deadlock cycle.
-    pub fn lock_recoverable(&self) -> Result<MutexGuard<'_, T>, crate::core::recovery::DeadlockError> {
+    pub fn lock_recoverable(
+        &self,
+    ) -> Result<MutexGuard<'_, T>, crate::core::recovery::DeadlockError> {
         let thread_id = get_current_thread_id();
         let tid_usize = thread_id;
 

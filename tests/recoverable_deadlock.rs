@@ -1,8 +1,6 @@
-use deloxide::{
-    Mutex, RecoveryPolicy, get_recovery_policy, set_recovery_policy,
-};
-use std::sync::{Arc, Barrier};
+use deloxide::{Mutex, RecoveryPolicy, get_recovery_policy, set_recovery_policy};
 use std::sync::atomic::{AtomicUsize, Ordering};
+use std::sync::{Arc, Barrier};
 use std::thread;
 use std::time::Duration;
 

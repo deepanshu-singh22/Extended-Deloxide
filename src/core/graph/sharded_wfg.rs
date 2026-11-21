@@ -293,7 +293,11 @@ impl ShardedWaitForGraph {
 
     pub fn register_thread(&self, thread_id: ThreadId) {
         let s_idx = shard_index(thread_id);
-        self.shards[s_idx].lock().edges.entry(thread_id).or_default();
+        self.shards[s_idx]
+            .lock()
+            .edges
+            .entry(thread_id)
+            .or_default();
     }
 
     #[cfg(test)]
@@ -355,8 +359,14 @@ mod tests {
         use std::time::Instant;
 
         let ops_per_thread = 10_000usize;
-        println!("\n=== WFG Scalability: Global Mutex vs Sharded (K={}) ===", NUM_SHARDS);
-        println!("{:<10} {:<15} {:<15} {:<10}", "Threads", "Global WFG", "Sharded WFG", "Speedup");
+        println!(
+            "\n=== WFG Scalability: Global Mutex vs Sharded (K={}) ===",
+            NUM_SHARDS
+        );
+        println!(
+            "{:<10} {:<15} {:<15} {:<10}",
+            "Threads", "Global WFG", "Sharded WFG", "Speedup"
+        );
 
         for &num_threads in &[8usize, 16, 32] {
             // 1. Global Mutex<WaitForGraph>
@@ -378,7 +388,9 @@ mod tests {
                     }
                 }));
             }
-            for h in handles { h.join().unwrap(); }
+            for h in handles {
+                h.join().unwrap();
+            }
             let global_ms = start.elapsed().as_secs_f64() * 1000.0;
 
             // 2. ShardedWaitForGraph (K=8)
@@ -399,11 +411,16 @@ mod tests {
                     }
                 }));
             }
-            for h in handles { h.join().unwrap(); }
+            for h in handles {
+                h.join().unwrap();
+            }
             let sharded_ms = start.elapsed().as_secs_f64() * 1000.0;
 
             let speedup = global_ms / sharded_ms;
-            println!("{:<10} {:<15.2} {:<15.2} {:.2}x", num_threads, global_ms, sharded_ms, speedup);
+            println!(
+                "{:<10} {:<15.2} {:<15.2} {:.2}x",
+                num_threads, global_ms, sharded_ms, speedup
+            );
         }
         println!();
     }
