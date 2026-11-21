@@ -104,6 +104,39 @@ impl ShardedWaitForGraph {
         let from_shard = shard_index(from);
         let to_shard = shard_index(to);
 
+        // Fast Path 0: Self-loop check
+        if from == to {
+            return Some(vec![from]);
+        }
+
+        // Fast Path 1: Zero-Incoming-Edge Bypass (O(1))
+        // If no thread is waiting on `from`, adding `from -> to` can NEVER form a cycle.
+        {
+            let mut f_shard = self.shards[from_shard].lock();
+            if f_shard.edges.get(&from).is_some_and(|t| t.contains(&to)) {
+                return None;
+            }
+            let has_incoming = f_shard
+                .incoming_edges
+                .get(&from)
+                .is_some_and(|w| !w.is_empty());
+            if !has_incoming {
+                f_shard.edges.entry(from).or_default().insert(to);
+                if from_shard == to_shard {
+                    f_shard.incoming_edges.entry(to).or_default().insert(from);
+                    return None;
+                }
+                drop(f_shard);
+                self.shards[to_shard]
+                    .lock()
+                    .incoming_edges
+                    .entry(to)
+                    .or_default()
+                    .insert(from);
+                return None;
+            }
+        }
+
         if from_shard == to_shard {
             let mut shard = self.shards[from_shard].lock();
             if shard.edges.get(&from).is_some_and(|t| t.contains(&to)) {
