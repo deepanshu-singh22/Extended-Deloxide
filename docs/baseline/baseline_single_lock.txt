@@ -1,0 +1,37 @@
+
+▄ ▄▖▖ ▄▖▖▖▄▖▄ ▄▖    ▗   ▄▖  ▄▖
+▌▌▙▖▌ ▌▌▚▘▐ ▌▌▙▖  ▌▌▜   ▛▌  ▛▌
+▙▘▙▖▙▖▙▌▌▌▟▖▙▘▙▖  ▚▘▟▖▗ █▌▗ █▌
+
+std_mutex_lock_unlock   time:   [5.9295 ns 5.9650 ns 6.0007 ns]
+                        change: [+8.1157% +8.5292% +8.9479%] (p = 0.00 < 0.05)
+                        Performance has regressed.
+Found 4 outliers among 100 measurements (4.00%)
+  3 (3.00%) low mild
+  1 (1.00%) high mild
+
+parking_lot_mutex_lock_unlock
+                        time:   [6.8019 ns 6.8075 ns 6.8133 ns]
+                        change: [+2.0418% +2.2718% +2.4938%] (p = 0.00 < 0.05)
+                        Performance has regressed.
+Found 13 outliers among 100 measurements (13.00%)
+  7 (7.00%) low mild
+  3 (3.00%) high mild
+  3 (3.00%) high severe
+
+no_deadlocks_mutex_lock_unlock
+                        time:   [11.067 µs 11.078 µs 11.090 µs]
+                        change: [+0.3480% +0.4836% +0.6060%] (p = 0.00 < 0.05)
+                        Change within noise threshold.
+Found 1 outliers among 100 measurements (1.00%)
+  1 (1.00%) high mild
+
+deloxide_mutex_lock_unlock
+                        time:   [9.8221 ns 9.8311 ns 9.8403 ns]
+                        change: [−0.9852% −0.6799% −0.3842%] (p = 0.00 < 0.05)
+                        Change within noise threshold.
+Found 5 outliers among 100 measurements (5.00%)
+  1 (1.00%) low severe
+  2 (2.00%) low mild
+  2 (2.00%) high mild
+

@@ -1,0 +1,30 @@
+
+▄ ▄▖▖ ▄▖▖▖▄▖▄ ▄▖    ▗   ▄▖  ▄▖
+▌▌▙▖▌ ▌▌▚▘▐ ▌▌▙▖  ▌▌▜   ▛▌  ▛▌
+▙▘▙▖▙▖▙▌▌▌▟▖▙▘▙▖  ▚▘▟▖▗ █▌▗ █▌
+
+producer_consumer_parking_lot_4x4
+                        time:   [219.04 µs 220.87 µs 223.18 µs]
+
+producer_consumer_parking_lot_16x16
+                        time:   [736.34 µs 744.20 µs 750.12 µs]
+
+producer_consumer_parking_lot_64x64
+                        time:   [3.4765 ms 3.5694 ms 3.6345 ms]
+
+producer_consumer_deloxide_4x4
+                        time:   [352.16 µs 359.22 µs 363.83 µs]
+Found 1 outliers among 10 measurements (10.00%)
+  1 (10.00%) low severe
+
+producer_consumer_deloxide_16x16
+                        time:   [2.1656 ms 2.1795 ms 2.1921 ms]
+Found 2 outliers among 10 measurements (20.00%)
+  1 (10.00%) low severe
+  1 (10.00%) low mild
+
+producer_consumer_deloxide_64x64
+                        time:   [17.977 ms 18.169 ms 18.472 ms]
+Found 1 outliers among 10 measurements (10.00%)
+  1 (10.00%) high mild
+
