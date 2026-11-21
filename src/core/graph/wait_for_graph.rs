@@ -1,3 +1,4 @@
+#![allow(dead_code)]
 //! Wait-For Graph for detecting active deadlocks
 //!
 //! This module implements a directed wait-for graph (WFG) that tracks runtime
