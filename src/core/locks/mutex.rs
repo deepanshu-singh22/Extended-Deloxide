@@ -224,6 +224,83 @@ impl<T> Mutex<T> {
         }
     }
 
+
+    /// Acquire the lock cooperatively, returning `Err(DeadlockError)` instead of
+    /// hanging if acquiring this lock would form a deadlock cycle.
+    pub fn lock_recoverable(&self) -> Result<MutexGuard<'_, T>, crate::core::recovery::DeadlockError> {
+        let thread_id = get_current_thread_id();
+        let tid_usize = thread_id;
+
+        #[cfg(not(feature = "stress-test"))]
+        if let Some(guard) = self.inner.try_lock() {
+            self.state.owner.store(tid_usize, Ordering::Release);
+            let tracked_globally =
+                cfg!(feature = "lock-order-graph") || self.state.contention.has_waiters();
+
+            if tracked_globally {
+                detector::mutex::complete_acquire(thread_id, self.id);
+            }
+
+            return Ok(MutexGuard {
+                thread_id,
+                lock_id: self.id,
+                guard,
+                state: &self.state,
+                tracked_globally,
+            });
+        }
+
+        let slow_waiter = self.state.contention.register();
+        let (rechecked_guard, deadlock_info) = detector::mutex::acquire_slow_with_recheck(
+            thread_id,
+            self.id,
+            || self.inner.try_lock(),
+            || {
+                let owner = self.state.owner.load(Ordering::Acquire);
+                (owner != 0).then_some(owner as ThreadId)
+            },
+        );
+
+        if let Some(info) = deadlock_info {
+            let policy = crate::core::recovery::get_recovery_policy();
+            let policy_victim = detector::mutex::select_victim(&info.thread_cycle, policy);
+            detector::mutex::cancel_wait(thread_id);
+            drop(slow_waiter);
+            return Err(crate::core::recovery::DeadlockError {
+                aborted_thread: thread_id,
+                lock_id: self.id,
+                cycle: info.thread_cycle,
+                policy_victim,
+                policy,
+            });
+        }
+
+        if let Some(guard) = rechecked_guard {
+            self.state.owner.store(tid_usize, Ordering::Release);
+            drop(slow_waiter);
+            return Ok(MutexGuard {
+                thread_id,
+                lock_id: self.id,
+                guard,
+                state: &self.state,
+                tracked_globally: true,
+            });
+        }
+
+        let guard = self.inner.lock();
+        self.state.owner.store(tid_usize, Ordering::Release);
+        detector::mutex::complete_acquire(thread_id, self.id);
+        drop(slow_waiter);
+
+        Ok(MutexGuard {
+            thread_id,
+            lock_id: self.id,
+            guard,
+            state: &self.state,
+            tracked_globally: true,
+        })
+    }
+
     /// Try to acquire the lock without blocking
     ///
     /// Returns Some(guard) if successful, None if the lock is held.

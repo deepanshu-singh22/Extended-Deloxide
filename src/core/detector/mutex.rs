@@ -252,3 +252,31 @@ where
     let info = cycle.and_then(|cycle| detector.validated_deadlock_info(cycle));
     (None, info)
 }
+
+/// Select a victim thread from a deadlock cycle based on the given RecoveryPolicy.
+pub fn select_victim(cycle: &[ThreadId], policy: crate::core::recovery::RecoveryPolicy) -> ThreadId {
+    use crate::core::recovery::RecoveryPolicy;
+    if cycle.is_empty() {
+        return 0;
+    }
+    let detector = GLOBAL_DETECTOR.lock();
+    match policy {
+        RecoveryPolicy::MinLocksHeld => *cycle
+            .iter()
+            .min_by_key(|&&tid| {
+                (
+                    detector.thread_holds.get(&tid).map_or(0, |h| h.len()),
+                    std::cmp::Reverse(tid),
+                )
+            })
+            .unwrap_or(&cycle[0]),
+        RecoveryPolicy::YoungestThread => *cycle.iter().max().unwrap_or(&cycle[0]),
+    }
+}
+
+/// Cancel a pending wait intent and remove its WFG edges when a thread aborts
+/// a recoverable lock acquisition.
+pub fn cancel_wait(thread_id: ThreadId) {
+    let mut detector = GLOBAL_DETECTOR.lock();
+    detector.clear_wait_intent(thread_id);
+}

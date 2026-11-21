@@ -6,6 +6,7 @@
 //! deadlock information, and the interfaces for tracking thread-lock relationships.
 
 // Core types
+pub mod recovery;
 pub(crate) mod types;
 pub(crate) use types::*;
 

@@ -263,3 +263,5 @@ const BANNER: &str = r#"
 ▌▌▙▖▌ ▌▌▚▘▐ ▌▌▙▖  ▌▌▜   ▛▌  ▛▌
 ▙▘▙▖▙▖▙▌▌▌▟▖▙▘▙▖  ▚▘▟▖▗ █▌▗ █▌
 "#;
+
+pub use core::recovery::{DeadlockError, RecoveryPolicy, get_recovery_policy, set_recovery_policy};
