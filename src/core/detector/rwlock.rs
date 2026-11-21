@@ -396,7 +396,7 @@ mod tests {
         assert!(result.is_none());
         assert!(!detector.thread_waits_for.contains_key(&1));
         assert!(!detector.lock_waiters.contains_key(&10));
-        assert!(!detector.wait_for_graph.edges.contains_key(&1));
+        assert!(!detector.wait_for_graph.contains_thread(1));
     }
 
     #[test]

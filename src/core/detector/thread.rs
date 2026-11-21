@@ -17,7 +17,7 @@ impl Detector {
         logger::log_thread_event(thread_id, parent_id, Events::ThreadSpawn);
 
         // Ensure node exists in the wait-for graph
-        self.wait_for_graph.edges.entry(thread_id).or_default();
+        self.wait_for_graph.register_thread(thread_id);
     }
 
     /// Register a thread exit

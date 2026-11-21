@@ -13,7 +13,7 @@ use crate::core::StressConfig;
 use crate::core::StressMode;
 #[cfg(feature = "lock-order-graph")]
 use crate::core::graph::LockOrderGraph;
-use crate::core::graph::WaitForGraph;
+use crate::core::graph::ShardedWaitForGraph;
 #[cfg(feature = "logging-and-visualization")]
 use crate::core::logger::{self, EventLogger};
 
@@ -116,7 +116,7 @@ impl Dispatcher {
 /// 5. When a cycle is detected, the deadlock callback is invoked
 pub struct Detector {
     /// Graph representing which threads are waiting for which other threads
-    wait_for_graph: WaitForGraph,
+    wait_for_graph: ShardedWaitForGraph,
     /// Lock order graph for detecting lock ordering violations (only created if enabled)
     #[cfg(feature = "lock-order-graph")]
     lock_order_graph: Option<LockOrderGraph>,
@@ -158,7 +158,7 @@ impl Detector {
     /// By default, lock order checking is disabled.
     pub fn new() -> Self {
         Detector {
-            wait_for_graph: WaitForGraph::new(),
+            wait_for_graph: ShardedWaitForGraph::new(),
             #[cfg(feature = "lock-order-graph")]
             lock_order_graph: None, // Not created by default
             thread_waits_for: FxHashMap::default(),

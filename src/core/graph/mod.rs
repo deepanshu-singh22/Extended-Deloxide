@@ -11,3 +11,6 @@ pub mod wait_for_graph;
 #[cfg(feature = "lock-order-graph")]
 pub use lock_order_graph::LockOrderGraph;
 pub use wait_for_graph::WaitForGraph;
+
+pub mod sharded_wfg;
+pub use sharded_wfg::ShardedWaitForGraph;
