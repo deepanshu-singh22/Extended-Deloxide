@@ -346,4 +346,65 @@ mod tests {
         wfg.remove_thread(2);
         assert!(wfg.add_edge(3, 1).is_none());
     }
+
+    #[test]
+    fn bench_sharded_vs_global_wfg() {
+        use crate::core::graph::wait_for_graph::WaitForGraph;
+        use std::sync::{Arc, Barrier};
+        use std::thread;
+        use std::time::Instant;
+
+        let ops_per_thread = 10_000usize;
+        println!("\n=== WFG Scalability: Global Mutex vs Sharded (K={}) ===", NUM_SHARDS);
+        println!("{:<10} {:<15} {:<15} {:<10}", "Threads", "Global WFG", "Sharded WFG", "Speedup");
+
+        for &num_threads in &[8usize, 16, 32] {
+            // 1. Global Mutex<WaitForGraph>
+            let global = Arc::new(Mutex::new(WaitForGraph::new()));
+            let barrier = Arc::new(Barrier::new(num_threads));
+            let start = Instant::now();
+            let mut handles = Vec::with_capacity(num_threads);
+            for t in 0..num_threads {
+                let g = Arc::clone(&global);
+                let b = Arc::clone(&barrier);
+                handles.push(thread::spawn(move || {
+                    let from = (t + 1) as ThreadId;
+                    let to = (t + 1 + NUM_SHARDS) as ThreadId;
+                    b.wait();
+                    for _ in 0..ops_per_thread {
+                        let mut guard = g.lock();
+                        let _ = guard.add_edge(from, to);
+                        guard.clear_wait_edges(from);
+                    }
+                }));
+            }
+            for h in handles { h.join().unwrap(); }
+            let global_ms = start.elapsed().as_secs_f64() * 1000.0;
+
+            // 2. ShardedWaitForGraph (K=8)
+            let sharded = Arc::new(ShardedWaitForGraph::new());
+            let barrier = Arc::new(Barrier::new(num_threads));
+            let start = Instant::now();
+            let mut handles = Vec::with_capacity(num_threads);
+            for t in 0..num_threads {
+                let g = Arc::clone(&sharded);
+                let b = Arc::clone(&barrier);
+                handles.push(thread::spawn(move || {
+                    let from = (t + 1) as ThreadId;
+                    let to = (t + 1 + NUM_SHARDS) as ThreadId;
+                    b.wait();
+                    for _ in 0..ops_per_thread {
+                        let _ = g.add_edge(from, to);
+                        g.clear_wait_edges(from);
+                    }
+                }));
+            }
+            for h in handles { h.join().unwrap(); }
+            let sharded_ms = start.elapsed().as_secs_f64() * 1000.0;
+
+            let speedup = global_ms / sharded_ms;
+            println!("{:<10} {:<15.2} {:<15.2} {:.2}x", num_threads, global_ms, sharded_ms, speedup);
+        }
+        println!();
+    }
 }
